@@ -221,7 +221,7 @@ def _get_post_for_comment_or_404(request, post_id: int) -> Post:
         pk=post_id,
     )
     if not check_post_visibility(post, request.user):
-        raise Http404("Публикация еще не опубликована.")
+        raise Http404("Пyбликaция еще нe опубликована.")
     return post
 
 
