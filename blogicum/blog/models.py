@@ -80,6 +80,7 @@ class Post(models.Model):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
+        related_name='posts',
         verbose_name='Автор публикации'
     )
 
@@ -88,6 +89,7 @@ class Post(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
+        related_name='posts',
         verbose_name='Местоположение'
     )
 
@@ -95,6 +97,7 @@ class Post(models.Model):
         Category,
         on_delete=models.SET_NULL,
         null=True,
+        related_name='posts',
         verbose_name='Категория'
     )
 
@@ -125,6 +128,7 @@ class Comment(models.Model):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
+        related_name='comments',
         verbose_name='Автор комментария',
     )
     created_at = models.DateTimeField(
