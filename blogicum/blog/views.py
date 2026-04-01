@@ -18,17 +18,22 @@ LOCATION_DEFAULT = 'Планета Земля'
 User = get_user_model()
 
 
-def get_published_posts_with_comments():
-    now = timezone.now()
-    return Post.objects.filter(
-        is_published=True,
-        category__is_published=True,
-        pub_date__lte=now
-    ).select_related(
+def annotate_and_order_posts(queryset):
+    return queryset.select_related(
         'author', 'category', 'location'
     ).annotate(
         comment_count=Count('comments')
-    ).order_by('-pub_date')
+    ).order_by(*Post._meta.ordering)
+
+
+def get_published_posts():
+    now = timezone.now()
+    published_qs = Post.objects.filter(
+        is_published=True,
+        category__is_published=True,
+        pub_date__lte=now
+    )
+    return annotate_and_order_posts(published_qs)
 
 
 def check_post_visibility(post, user):
@@ -50,7 +55,7 @@ class IndexView(ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        return get_published_posts_with_comments()
+        return get_published_posts()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -71,9 +76,7 @@ class CategoryPostsView(ListView):
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
-        return get_published_posts_with_comments().filter(
-            category=self.category
-        )
+        return get_published_posts().filter(category=self.category)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -117,16 +120,11 @@ class ProfileView(ListView):
     def dispatch(self, request, *args, **kwargs):
         self.profile = get_object_or_404(
             User,
-            username=self.kwargs['username']
-        )
+            username=self.kwargs['username'])
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
-        qs = self.profile.posts.select_related(
-            'author', 'category', 'location'
-        ).annotate(
-            comment_count=Count('comments')
-        ).order_by('-pub_date')
+        qs = annotate_and_order_posts(self.profile.posts.all())
 
         if self.request.user == self.profile:
             return qs
@@ -221,7 +219,7 @@ def _get_post_for_comment_or_404(request, post_id: int) -> Post:
         pk=post_id,
     )
     if not check_post_visibility(post, request.user):
-        raise Http404("Пyбликaция еще нe опубликована.")
+        raise Http404("Публикация еще не опубликоваna.")
     return post
 
 

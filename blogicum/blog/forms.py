@@ -3,14 +3,16 @@ from django.contrib.auth import get_user_model
 
 from .models import Post, Comment
 
-
 User = get_user_model()
 
 
 class UserEditForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ('username', 'email', 'first_name', 'last_name')
+        exclude = (
+            'password', 'last_login', 'is_superuser', 'groups',
+            'user_permissions', 'is_staff', 'is_active', 'date_joined'
+        )
         widgets = {
             'username': forms.TextInput(attrs={'class': 'form-control'}),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
@@ -45,7 +47,7 @@ class PostForm(forms.ModelForm):
 class CommentForm(forms.ModelForm):
     class Meta:
         model = Comment
-        fields = ('text',)
+        exclude = ('post', 'author', 'created_at')
         widgets = {
             'text': forms.Textarea(attrs={
                 'class': 'form-control',
